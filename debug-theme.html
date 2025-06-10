@@ -5,44 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Theme Debug</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        .debug-info {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 12px;
-            z-index: 9999;
-        }
-        .theme-test {
-            padding: 20px;
-            margin: 20px;
-            border: 2px solid var(--primary-color);
-            background: var(--theme-bg);
-            color: var(--theme-text);
-        }
-        .color-samples {
-            display: flex;
-            gap: 10px;
-            margin: 20px;
-        }
-        .color-sample {
-            width: 50px;
-            height: 50px;
-            border: 1px solid #ccc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/debug.css">
 </head>
 <body>
-    <div class="debug-info">
+    <div class="debug-info" role="region" aria-live="polite" aria-label="Debug information panel">
         <div>Current theme: <span id="current-theme">light</span></div>
         <div>Body BG: <span id="body-bg">unknown</span></div>
         <div>Theme toggle visible: <span id="toggle-visible">unknown</span></div>
@@ -69,7 +35,7 @@
 
     <script src="js/script.js"></script>
     <script>
-        // Debug info
+        // Optimized debug info with MutationObserver
         function updateDebugInfo() {
             const theme = document.documentElement.getAttribute('data-theme');
             const bodyBg = getComputedStyle(document.body).backgroundColor;
@@ -81,8 +47,40 @@
             document.getElementById('toggle-visible').textContent = toggleVisible;
         }
         
-        setInterval(updateDebugInfo, 1000);
+        // Initial update
         updateDebugInfo();
+        
+        // Watch for theme changes using MutationObserver
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && 
+                    (mutation.attributeName === 'data-theme' || 
+                     mutation.attributeName === 'style')) {
+                    updateDebugInfo();
+                }
+            });
+        });
+        
+        // Observe theme changes on documentElement
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        });
+        
+        // Observe style changes on theme toggle button
+        const toggleBtn = document.getElementById('theme-toggle');
+        if (toggleBtn) {
+            observer.observe(toggleBtn, {
+                attributes: true,
+                attributeFilter: ['style', 'class']
+            });
+        }
+        
+        // Also observe body style changes
+        observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ['style', 'class']
+        });
     </script>
 </body>
 </html>
