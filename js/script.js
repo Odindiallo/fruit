@@ -30,6 +30,7 @@ class FruitWebsite {
         this.performance = new PerformanceManager();
         this.accessibility = new AccessibilityManager();
         this.images = new ImageManager();
+        this.theme = new ThemeManager();
         
         this.init();
     }
@@ -56,6 +57,7 @@ class FruitWebsite {
         this.animations.init();
         this.performance.init();
         this.accessibility.init();
+        this.theme.init();
         
         // Setup event listeners
         this.setupEventListeners();
@@ -2067,6 +2069,109 @@ class ImageManager {
                 }
             }
         });
+    }
+}
+
+// ================================
+// THEME MANAGER
+// ================================
+
+class ThemeManager {
+    constructor() {
+        this.currentTheme = 'light';
+        this.themeToggle = null;
+        this.themeIcon = null;
+    }
+
+    init() {
+        this.themeToggle = document.getElementById('theme-toggle');
+        this.themeIcon = this.themeToggle?.querySelector('.theme-icon');
+        
+        // Load saved theme or use system preference
+        this.loadThemePreference();
+        
+        // Setup theme toggle button
+        if (this.themeToggle) {
+            this.themeToggle.addEventListener('click', () => this.toggleTheme());
+        }
+        
+        // Listen for system theme changes
+        this.watchSystemTheme();
+    }
+
+    loadThemePreference() {
+        // Check localStorage first
+        const savedTheme = localStorage.getItem('theme');
+        
+        if (savedTheme) {
+            this.currentTheme = savedTheme;
+        } else {
+            // Check system preference
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            this.currentTheme = prefersDark ? 'dark' : 'light';
+        }
+        
+        this.applyTheme(this.currentTheme);
+    }
+
+    applyTheme(theme) {
+        this.currentTheme = theme;
+        document.documentElement.setAttribute('data-theme', theme);
+        
+        // Update theme toggle icon
+        if (this.themeIcon) {
+            this.themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        // Update meta theme-color
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        if (metaThemeColor) {
+            metaThemeColor.content = theme === 'dark' ? '#121212' : '#ffffff';
+        } else {
+            const meta = document.createElement('meta');
+            meta.name = 'theme-color';
+            meta.content = theme === 'dark' ? '#121212' : '#ffffff';
+            document.head.appendChild(meta);
+        }
+        
+        // Save preference
+        localStorage.setItem('theme', theme);
+        
+        // Announce theme change for screen readers
+        this.announceThemeChange(theme);
+    }
+
+    toggleTheme() {
+        const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+        this.applyTheme(newTheme);
+        
+        // Add animation to button
+        if (this.themeToggle) {
+            this.themeToggle.style.transform = 'rotate(360deg)';
+            setTimeout(() => {
+                this.themeToggle.style.transform = '';
+            }, 300);
+        }
+    }
+
+    watchSystemTheme() {
+        const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        
+        darkModeQuery.addEventListener('change', (e) => {
+            // Only auto-switch if user hasn't manually set a preference
+            if (!localStorage.getItem('theme')) {
+                this.applyTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+    }
+
+    announceThemeChange(theme) {
+        const message = `Theme changed to ${theme} mode`;
+        
+        // Use the accessibility manager's announcer if available
+        if (window.fruitWebsite?.accessibility?.announce) {
+            window.fruitWebsite.accessibility.announce(message);
+        }
     }
 }
 

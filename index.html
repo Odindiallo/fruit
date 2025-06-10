@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,6 +32,15 @@
     <meta name="twitter:description" content="Premium organic fruits delivered fresh">
 </head>
 <body>
+    <script>
+        // Prevent transition flash on page load
+        document.documentElement.classList.add('no-transitions');
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.documentElement.classList.remove('no-transitions');
+            }, 100);
+        });
+    </script>
     <!-- Skip to main content for accessibility -->
     <a href="#main-content" class="skip-link" aria-label="Skip to main content">Skip to main content</a>
     
@@ -612,6 +621,11 @@
     <!-- Back to Top Button -->
     <button id="back-to-top" class="back-to-top" aria-label="Back to top" title="Back to top">
         ⬆️
+    </button>
+    
+    <!-- Theme Toggle Button -->
+    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light mode" title="Toggle theme">
+        <span class="theme-icon">🌙</span>
     </button>
     
     <!-- Scripts -->
