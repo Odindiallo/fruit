@@ -228,17 +228,24 @@ class FruitWebsite {
         
         if (!searchInput) return;
         
+        let searchTimeout;
+        
         const performSearch = () => {
             const query = searchInput.value.toLowerCase().trim();
             const fruitCards = document.querySelectorAll('.fruit-card');
             let visibleCount = 0;
             
             fruitCards.forEach(card => {
+                // Skip cards hidden by category filter
+                if (card.classList.contains('hidden')) {
+                    return;
+                }
+                
                 const fruitName = card.querySelector('.fruit-name').textContent.toLowerCase();
                 const fruitDesc = card.querySelector('.fruit-description').textContent.toLowerCase();
                 const isMatch = query === '' || fruitName.includes(query) || fruitDesc.includes(query);
                 
-                if (isMatch && !card.classList.contains('hidden')) {
+                if (isMatch) {
                     card.style.display = 'block';
                     card.classList.remove('search-hidden');
                     visibleCount++;
@@ -263,25 +270,50 @@ class FruitWebsite {
                 if (!existingNoResults) {
                     const noResultsDiv = document.createElement('div');
                     noResultsDiv.className = 'no-results';
-                    noResultsDiv.textContent = `No fruits found for "${query}". Try a different search term.`;
+                    // Use textContent to prevent XSS
+                    noResultsDiv.textContent = 'No fruits found for "';
+                    const querySpan = document.createElement('span');
+                    querySpan.textContent = query;
+                    noResultsDiv.appendChild(querySpan);
+                    noResultsDiv.appendChild(document.createTextNode('". Try a different search term.'));
                     fruitsGrid.appendChild(noResultsDiv);
                 }
             } else if (existingNoResults) {
                 existingNoResults.remove();
             }
+            
+            // Announce for screen readers
+            if (window.fruitWebsite?.accessibility) {
+                const message = query 
+                    ? `Search results: ${visibleCount} fruit${visibleCount !== 1 ? 's' : ''} found`
+                    : 'Search cleared, showing all fruits';
+                window.fruitWebsite.accessibility.announce(message);
+            }
         };
         
-        // Search on input
-        searchInput.addEventListener('input', performSearch);
+        // Search on input with debouncing
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 300);
+        });
         
         // Search on button click
-        searchBtn.addEventListener('click', performSearch);
+        searchBtn.addEventListener('click', () => {
+            clearTimeout(searchTimeout);
+            performSearch();
+        });
         
         // Search on Enter key
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                clearTimeout(searchTimeout);
                 performSearch();
             }
+        });
+        
+        // Cleanup timeout on page unload
+        window.addEventListener('beforeunload', () => {
+            clearTimeout(searchTimeout);
         });
     }
 
@@ -297,25 +329,29 @@ class FruitWebsite {
             // Sort cards
             fruitCards.sort((a, b) => {
                 switch (sortValue) {
-                    case 'name':
+                    case 'name': {
                         const nameA = a.querySelector('.fruit-name').textContent;
                         const nameB = b.querySelector('.fruit-name').textContent;
                         return nameA.localeCompare(nameB);
+                    }
                         
-                    case 'name-desc':
+                    case 'name-desc': {
                         const nameDescA = a.querySelector('.fruit-name').textContent;
                         const nameDescB = b.querySelector('.fruit-name').textContent;
                         return nameDescB.localeCompare(nameDescA);
+                    }
                         
-                    case 'price-asc':
+                    case 'price-asc': {
                         const priceA = parseFloat(a.querySelector('.fruit-price').dataset.price || 0);
                         const priceB = parseFloat(b.querySelector('.fruit-price').dataset.price || 0);
                         return priceA - priceB;
+                    }
                         
-                    case 'price-desc':
+                    case 'price-desc': {
                         const priceDescA = parseFloat(a.querySelector('.fruit-price').dataset.price || 0);
                         const priceDescB = parseFloat(b.querySelector('.fruit-price').dataset.price || 0);
                         return priceDescB - priceDescA;
+                    }
                         
                     default:
                         return 0;
@@ -333,10 +369,18 @@ class FruitWebsite {
     }
 
     setupQuantitySelectors() {
+        // Store original button texts
+        const buttonTexts = new WeakMap();
+        
         document.addEventListener('click', (event) => {
             // Handle quantity buttons
             if (event.target.classList.contains('qty-btn')) {
                 const input = event.target.parentElement.querySelector('.qty-input');
+                if (!input) {
+                    console.warn('Quantity input not found');
+                    return;
+                }
+                
                 const currentValue = parseInt(input.value) || 1;
                 
                 if (event.target.classList.contains('plus')) {
@@ -352,8 +396,15 @@ class FruitWebsite {
             // Handle add to cart with quantity
             if (event.target.classList.contains('add-to-cart-btn')) {
                 const card = event.target.closest('.fruit-card');
+                if (!card) return;
+                
                 const quantityInput = card.querySelector('.qty-input');
                 const quantity = parseInt(quantityInput?.value) || 1;
+                
+                // Store original text if not already stored
+                if (!buttonTexts.has(event.target)) {
+                    buttonTexts.set(event.target, event.target.textContent);
+                }
                 
                 // Add loading state
                 event.target.classList.add('loading');
@@ -364,14 +415,13 @@ class FruitWebsite {
                     const fruitName = card.querySelector('.fruit-name').textContent;
                     const price = event.target.dataset.price;
                     
-                    // Add to cart multiple times based on quantity
-                    for (let i = 0; i < quantity; i++) {
-                        this.cart.addToCart({
-                            name: fruitName,
-                            price: `$${price}`,
-                            id: this.cart.generateId(fruitName)
-                        });
-                    }
+                    // Add to cart with quantity (more efficient)
+                    this.cart.addToCartWithQuantity({
+                        name: fruitName,
+                        price: `$${price}`,
+                        id: this.cart.generateId(fruitName),
+                        quantity: quantity
+                    });
                     
                     // Remove loading state
                     event.target.classList.remove('loading');
@@ -384,8 +434,9 @@ class FruitWebsite {
                     
                     // Show success animation
                     event.target.textContent = '✓ Added!';
+                    const originalText = buttonTexts.get(event.target);
                     setTimeout(() => {
-                        event.target.textContent = 'Add to Cart';
+                        event.target.textContent = originalText;
                     }, 1500);
                 }, 600);
             }
@@ -396,6 +447,11 @@ class FruitWebsite {
             if (event.target.classList.contains('qty-input')) {
                 const value = parseInt(event.target.value) || 1;
                 event.target.value = Math.max(1, Math.min(value, 99));
+                
+                // Announce change for screen readers
+                if (window.fruitWebsite?.accessibility) {
+                    window.fruitWebsite.accessibility.announce(`Quantity updated to ${event.target.value}`);
+                }
             }
         });
     }
@@ -1036,6 +1092,28 @@ class CartManager {
         
         // Show notification
         const notification = `${fruit.name} added to cart!`;
+        window.fruitWebsite.showNotification(notification, 'success');
+    }
+
+    addToCartWithQuantity(fruit) {
+        const existingItem = this.items.find(item => item.id === fruit.id);
+        
+        if (existingItem) {
+            existingItem.quantity += fruit.quantity;
+        } else {
+            this.items.push({
+                ...fruit,
+                addedAt: new Date().toISOString()
+            });
+        }
+        
+        this.saveCart();
+        this.updateCartDisplay();
+        this.renderCartItems();
+        this.showAddToCartAnimation(fruit);
+        
+        // Show notification with quantity
+        const notification = `${fruit.quantity} × ${fruit.name} added to cart!`;
         window.fruitWebsite.showNotification(notification, 'success');
     }
 
