@@ -87,6 +87,15 @@ class FruitWebsite {
         // Fruit filtering
         this.setupFruitFiltering();
         
+        // Search functionality
+        this.setupFruitSearch();
+        
+        // Sort functionality
+        this.setupFruitSorting();
+        
+        // Quantity selectors
+        this.setupQuantitySelectors();
+        
         // Hero button actions
         this.setupHeroActions();
         
@@ -209,6 +218,185 @@ class FruitWebsite {
                     }, 300);
                 }
             }, index * 50);
+        });
+    }
+
+    setupFruitSearch() {
+        const searchInput = document.getElementById('fruit-search');
+        const searchBtn = document.querySelector('.search-btn');
+        const searchResults = document.getElementById('search-results');
+        
+        if (!searchInput) return;
+        
+        const performSearch = () => {
+            const query = searchInput.value.toLowerCase().trim();
+            const fruitCards = document.querySelectorAll('.fruit-card');
+            let visibleCount = 0;
+            
+            fruitCards.forEach(card => {
+                const fruitName = card.querySelector('.fruit-name').textContent.toLowerCase();
+                const fruitDesc = card.querySelector('.fruit-description').textContent.toLowerCase();
+                const isMatch = query === '' || fruitName.includes(query) || fruitDesc.includes(query);
+                
+                if (isMatch && !card.classList.contains('hidden')) {
+                    card.style.display = 'block';
+                    card.classList.remove('search-hidden');
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                    card.classList.add('search-hidden');
+                }
+            });
+            
+            // Update results count
+            if (query) {
+                searchResults.textContent = `Found ${visibleCount} fruit${visibleCount !== 1 ? 's' : ''}`;
+            } else {
+                searchResults.textContent = '';
+            }
+            
+            // Show no results message if needed
+            const fruitsGrid = document.querySelector('.fruits-grid');
+            const existingNoResults = fruitsGrid.querySelector('.no-results');
+            
+            if (visibleCount === 0 && query) {
+                if (!existingNoResults) {
+                    const noResultsDiv = document.createElement('div');
+                    noResultsDiv.className = 'no-results';
+                    noResultsDiv.textContent = `No fruits found for "${query}". Try a different search term.`;
+                    fruitsGrid.appendChild(noResultsDiv);
+                }
+            } else if (existingNoResults) {
+                existingNoResults.remove();
+            }
+        };
+        
+        // Search on input
+        searchInput.addEventListener('input', performSearch);
+        
+        // Search on button click
+        searchBtn.addEventListener('click', performSearch);
+        
+        // Search on Enter key
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    }
+
+    setupFruitSorting() {
+        const sortSelect = document.getElementById('sort-select');
+        if (!sortSelect) return;
+        
+        sortSelect.addEventListener('change', () => {
+            const sortValue = sortSelect.value;
+            const fruitsGrid = document.querySelector('.fruits-grid');
+            const fruitCards = Array.from(fruitsGrid.querySelectorAll('.fruit-card'));
+            
+            // Sort cards
+            fruitCards.sort((a, b) => {
+                switch (sortValue) {
+                    case 'name':
+                        const nameA = a.querySelector('.fruit-name').textContent;
+                        const nameB = b.querySelector('.fruit-name').textContent;
+                        return nameA.localeCompare(nameB);
+                        
+                    case 'name-desc':
+                        const nameDescA = a.querySelector('.fruit-name').textContent;
+                        const nameDescB = b.querySelector('.fruit-name').textContent;
+                        return nameDescB.localeCompare(nameDescA);
+                        
+                    case 'price-asc':
+                        const priceA = parseFloat(a.querySelector('.fruit-price').dataset.price || 0);
+                        const priceB = parseFloat(b.querySelector('.fruit-price').dataset.price || 0);
+                        return priceA - priceB;
+                        
+                    case 'price-desc':
+                        const priceDescA = parseFloat(a.querySelector('.fruit-price').dataset.price || 0);
+                        const priceDescB = parseFloat(b.querySelector('.fruit-price').dataset.price || 0);
+                        return priceDescB - priceDescA;
+                        
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Re-append cards in sorted order
+            fruitCards.forEach((card, index) => {
+                setTimeout(() => {
+                    fruitsGrid.appendChild(card);
+                    card.style.animation = 'fadeInUp 0.5s ease-out';
+                }, index * 50);
+            });
+        });
+    }
+
+    setupQuantitySelectors() {
+        document.addEventListener('click', (event) => {
+            // Handle quantity buttons
+            if (event.target.classList.contains('qty-btn')) {
+                const input = event.target.parentElement.querySelector('.qty-input');
+                const currentValue = parseInt(input.value) || 1;
+                
+                if (event.target.classList.contains('plus')) {
+                    input.value = Math.min(currentValue + 1, 99);
+                } else if (event.target.classList.contains('minus')) {
+                    input.value = Math.max(currentValue - 1, 1);
+                }
+                
+                // Trigger change event
+                input.dispatchEvent(new Event('change'));
+            }
+            
+            // Handle add to cart with quantity
+            if (event.target.classList.contains('add-to-cart-btn')) {
+                const card = event.target.closest('.fruit-card');
+                const quantityInput = card.querySelector('.qty-input');
+                const quantity = parseInt(quantityInput?.value) || 1;
+                
+                // Add loading state
+                event.target.classList.add('loading');
+                event.target.disabled = true;
+                
+                // Simulate adding to cart
+                setTimeout(() => {
+                    const fruitName = card.querySelector('.fruit-name').textContent;
+                    const price = event.target.dataset.price;
+                    
+                    // Add to cart multiple times based on quantity
+                    for (let i = 0; i < quantity; i++) {
+                        this.cart.addToCart({
+                            name: fruitName,
+                            price: `$${price}`,
+                            id: this.cart.generateId(fruitName)
+                        });
+                    }
+                    
+                    // Remove loading state
+                    event.target.classList.remove('loading');
+                    event.target.disabled = false;
+                    
+                    // Reset quantity
+                    if (quantityInput) {
+                        quantityInput.value = 1;
+                    }
+                    
+                    // Show success animation
+                    event.target.textContent = '✓ Added!';
+                    setTimeout(() => {
+                        event.target.textContent = 'Add to Cart';
+                    }, 1500);
+                }, 600);
+            }
+        });
+        
+        // Handle quantity input changes
+        document.addEventListener('change', (event) => {
+            if (event.target.classList.contains('qty-input')) {
+                const value = parseInt(event.target.value) || 1;
+                event.target.value = Math.max(1, Math.min(value, 99));
+            }
         });
     }
 

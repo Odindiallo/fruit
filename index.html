@@ -137,6 +137,21 @@
                     <p class="section-subtitle">Handpicked from the finest orchards around the world</p>
                 </div>
                 
+                <!-- Search Bar -->
+                <div class="fruit-search-container">
+                    <div class="search-box">
+                        <input type="search" 
+                               id="fruit-search" 
+                               class="fruit-search" 
+                               placeholder="Search for fruits..." 
+                               aria-label="Search fruits">
+                        <button class="search-btn" aria-label="Search">
+                            <span class="search-icon">🔍</span>
+                        </button>
+                    </div>
+                    <div class="search-results-count" id="search-results" aria-live="polite"></div>
+                </div>
+                
                 <!-- Fruit Categories Filter -->
                 <div class="fruit-filters">
                     <button class="filter-btn active" data-filter="all" aria-pressed="true">All Fruits</button>
@@ -144,6 +159,17 @@
                     <button class="filter-btn" data-filter="citrus" aria-pressed="false">Citrus</button>
                     <button class="filter-btn" data-filter="berries" aria-pressed="false">Berries</button>
                     <button class="filter-btn" data-filter="seasonal" aria-pressed="false">Seasonal</button>
+                </div>
+                
+                <!-- Sort Options -->
+                <div class="sort-container">
+                    <label for="sort-select" class="sort-label">Sort by:</label>
+                    <select id="sort-select" class="sort-select">
+                        <option value="name">Name (A-Z)</option>
+                        <option value="name-desc">Name (Z-A)</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                    </select>
                 </div>
                 
                 <!-- Fruits Grid -->
@@ -166,8 +192,13 @@
                                 <span class="fruit-season">🗓️ Year Round</span>
                             </div>
                             <div class="card-footer">
-                                <span class="fruit-price">$4.99/lb</span>
-                                <button class="add-to-cart-btn" data-fruit="mango" aria-label="Add Premium Mango to cart">
+                                <span class="fruit-price" data-price="4.99">$4.99/lb</span>
+                                <div class="quantity-selector">
+                                    <button class="qty-btn minus" aria-label="Decrease quantity">-</button>
+                                    <input type="number" class="qty-input" value="1" min="1" max="99" aria-label="Quantity">
+                                    <button class="qty-btn plus" aria-label="Increase quantity">+</button>
+                                </div>
+                                <button class="add-to-cart-btn" data-fruit="mango" data-price="4.99" aria-label="Add Premium Mango to cart">
                                     Add to Cart
                                 </button>
                             </div>
@@ -191,8 +222,13 @@
                                 <span class="fruit-season">🗓️ Year Round</span>
                             </div>
                             <div class="card-footer">
-                                <span class="fruit-price">$5.99 each</span>
-                                <button class="add-to-cart-btn" data-fruit="pineapple" aria-label="Add Golden Pineapple to cart">
+                                <span class="fruit-price" data-price="5.99">$5.99 each</span>
+                                <div class="quantity-selector">
+                                    <button class="qty-btn minus" aria-label="Decrease quantity">-</button>
+                                    <input type="number" class="qty-input" value="1" min="1" max="99" aria-label="Quantity">
+                                    <button class="qty-btn plus" aria-label="Increase quantity">+</button>
+                                </div>
+                                <button class="add-to-cart-btn" data-fruit="pineapple" data-price="5.99" aria-label="Add Golden Pineapple to cart">
                                     Add to Cart
                                 </button>
                             </div>
@@ -216,8 +252,13 @@
                                 <span class="fruit-season">🗓️ Year Round</span>
                             </div>
                             <div class="card-footer">
-                                <span class="fruit-price">$3.99 each</span>
-                                <button class="add-to-cart-btn" data-fruit="coconut" aria-label="Add Fresh Coconut to cart">
+                                <span class="fruit-price" data-price="3.99">$3.99 each</span>
+                                <div class="quantity-selector">
+                                    <button class="qty-btn minus" aria-label="Decrease quantity">-</button>
+                                    <input type="number" class="qty-input" value="1" min="1" max="99" aria-label="Quantity">
+                                    <button class="qty-btn plus" aria-label="Increase quantity">+</button>
+                                </div>
+                                <button class="add-to-cart-btn" data-fruit="coconut" data-price="3.99" aria-label="Add Fresh Coconut to cart">
                                     Add to Cart
                                 </button>
                             </div>
@@ -242,8 +283,13 @@
                                 <span class="fruit-season">🗓️ Winter-Spring</span>
                             </div>
                             <div class="card-footer">
-                                <span class="fruit-price">$2.99/lb</span>
-                                <button class="add-to-cart-btn" data-fruit="orange" aria-label="Add Valencia Oranges to cart">
+                                <span class="fruit-price" data-price="2.99">$2.99/lb</span>
+                                <div class="quantity-selector">
+                                    <button class="qty-btn minus" aria-label="Decrease quantity">-</button>
+                                    <input type="number" class="qty-input" value="1" min="1" max="99" aria-label="Quantity">
+                                    <button class="qty-btn plus" aria-label="Increase quantity">+</button>
+                                </div>
+                                <button class="add-to-cart-btn" data-fruit="orange" data-price="2.99" aria-label="Add Valencia Oranges to cart">
                                     Add to Cart
                                 </button>
                             </div>
@@ -267,8 +313,13 @@
                                 <span class="fruit-season">🗓️ Winter</span>
                             </div>
                             <div class="card-footer">
-                                <span class="fruit-price">$3.49/lb</span>
-                                <button class="add-to-cart-btn" data-fruit="lemon" aria-label="Add Meyer Lemons to cart">
+                                <span class="fruit-price" data-price="3.49">$3.49/lb</span>
+                                <div class="quantity-selector">
+                                    <button class="qty-btn minus" aria-label="Decrease quantity">-</button>
+                                    <input type="number" class="qty-input" value="1" min="1" max="99" aria-label="Quantity">
+                                    <button class="qty-btn plus" aria-label="Increase quantity">+</button>
+                                </div>
+                                <button class="add-to-cart-btn" data-fruit="lemon" data-price="3.49" aria-label="Add Meyer Lemons to cart">
                                     Add to Cart
                                 </button>
                             </div>
@@ -293,8 +344,13 @@
                                 <span class="fruit-season">🗓️ Spring-Summer</span>
                             </div>
                             <div class="card-footer">
-                                <span class="fruit-price">$6.99/lb</span>
-                                <button class="add-to-cart-btn" data-fruit="strawberry" aria-label="Add Organic Strawberries to cart">
+                                <span class="fruit-price" data-price="6.99">$6.99/lb</span>
+                                <div class="quantity-selector">
+                                    <button class="qty-btn minus" aria-label="Decrease quantity">-</button>
+                                    <input type="number" class="qty-input" value="1" min="1" max="99" aria-label="Quantity">
+                                    <button class="qty-btn plus" aria-label="Increase quantity">+</button>
+                                </div>
+                                <button class="add-to-cart-btn" data-fruit="strawberry" data-price="6.99" aria-label="Add Organic Strawberries to cart">
                                     Add to Cart
                                 </button>
                             </div>
@@ -318,8 +374,13 @@
                                 <span class="fruit-season">🗓️ Summer</span>
                             </div>
                             <div class="card-footer">
-                                <span class="fruit-price">$8.99/lb</span>
-                                <button class="add-to-cart-btn" data-fruit="blueberry" aria-label="Add Wild Blueberries to cart">
+                                <span class="fruit-price" data-price="8.99">$8.99/lb</span>
+                                <div class="quantity-selector">
+                                    <button class="qty-btn minus" aria-label="Decrease quantity">-</button>
+                                    <input type="number" class="qty-input" value="1" min="1" max="99" aria-label="Quantity">
+                                    <button class="qty-btn plus" aria-label="Increase quantity">+</button>
+                                </div>
+                                <button class="add-to-cart-btn" data-fruit="blueberry" data-price="8.99" aria-label="Add Wild Blueberries to cart">
                                     Add to Cart
                                 </button>
                             </div>
@@ -344,8 +405,13 @@
                                 <span class="fruit-season">🗓️ Fall</span>
                             </div>
                             <div class="card-footer">
-                                <span class="fruit-price">$3.99/lb</span>
-                                <button class="add-to-cart-btn" data-fruit="apple" aria-label="Add Honeycrisp Apples to cart">
+                                <span class="fruit-price" data-price="3.99">$3.99/lb</span>
+                                <div class="quantity-selector">
+                                    <button class="qty-btn minus" aria-label="Decrease quantity">-</button>
+                                    <input type="number" class="qty-input" value="1" min="1" max="99" aria-label="Quantity">
+                                    <button class="qty-btn plus" aria-label="Increase quantity">+</button>
+                                </div>
+                                <button class="add-to-cart-btn" data-fruit="apple" data-price="3.99" aria-label="Add Honeycrisp Apples to cart">
                                     Add to Cart
                                 </button>
                             </div>
