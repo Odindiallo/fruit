@@ -87,6 +87,15 @@ class FruitWebsite {
         // Fruit filtering
         this.setupFruitFiltering();
         
+        // Search functionality
+        this.setupFruitSearch();
+        
+        // Sort functionality
+        this.setupFruitSorting();
+        
+        // Quantity selectors
+        this.setupQuantitySelectors();
+        
         // Hero button actions
         this.setupHeroActions();
         
@@ -209,6 +218,253 @@ class FruitWebsite {
                     }, 300);
                 }
             }, index * 50);
+        });
+    }
+
+    setupFruitSearch() {
+        const searchInput = document.getElementById('fruit-search');
+        const searchBtn = document.querySelector('.search-btn');
+        const searchResults = document.getElementById('search-results');
+        
+        if (!searchInput || !searchBtn || !searchResults) {
+            console.warn('[FruitSearch] Search controls not found – feature disabled.');
+            return;
+        }
+        
+        let searchTimeout;
+        
+        const performSearch = () => {
+            const query = searchInput.value.toLowerCase().trim();
+            const fruitCards = document.querySelectorAll('.fruit-card');
+            let visibleCount = 0;
+            
+            fruitCards.forEach(card => {
+                // Skip cards hidden by category filter
+                if (card.classList.contains('hidden')) {
+                    return;
+                }
+                
+                const fruitName = card.querySelector('.fruit-name').textContent.toLowerCase();
+                const fruitDesc = card.querySelector('.fruit-description').textContent.toLowerCase();
+                const isMatch = query === '' || fruitName.includes(query) || fruitDesc.includes(query);
+                
+                if (isMatch) {
+                    card.style.display = 'block';
+                    card.classList.remove('search-hidden');
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                    card.classList.add('search-hidden');
+                }
+            });
+            
+            // Update results count
+            if (searchResults) {
+                searchResults.textContent = query
+                    ? `Found ${visibleCount} fruit${visibleCount !== 1 ? 's' : ''}`
+                    : '';
+            }
+            
+            // Show no results message if needed
+            const fruitsGrid = document.querySelector('.fruits-grid');
+            if (!fruitsGrid) return;
+            
+            const existingNoResults = fruitsGrid.querySelector('.no-results');
+            
+            if (visibleCount === 0 && query) {
+                if (!existingNoResults) {
+                    const noResultsDiv = document.createElement('div');
+                    noResultsDiv.className = 'no-results';
+                    // Use textContent to prevent XSS
+                    noResultsDiv.textContent = 'No fruits found for "';
+                    const querySpan = document.createElement('span');
+                    querySpan.textContent = query;
+                    noResultsDiv.appendChild(querySpan);
+                    noResultsDiv.appendChild(document.createTextNode('". Try a different search term.'));
+                    fruitsGrid.appendChild(noResultsDiv);
+                }
+            } else if (existingNoResults) {
+                existingNoResults.remove();
+            }
+            
+            // Announce for screen readers
+            if (window.fruitWebsite?.accessibility) {
+                const message = query 
+                    ? `Search results: ${visibleCount} fruit${visibleCount !== 1 ? 's' : ''} found`
+                    : 'Search cleared, showing all fruits';
+                window.fruitWebsite.accessibility.announce(message);
+            }
+        };
+        
+        // Search on input with debouncing
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 300);
+        });
+        
+        // Search on button click
+        searchBtn.addEventListener('click', () => {
+            clearTimeout(searchTimeout);
+            performSearch();
+        });
+        
+        // Search on Enter key
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                clearTimeout(searchTimeout);
+                performSearch();
+            }
+        });
+        
+        // Cleanup timeout on page unload
+        window.addEventListener('beforeunload', () => {
+            clearTimeout(searchTimeout);
+        });
+    }
+
+    setupFruitSorting() {
+        const sortSelect = document.getElementById('sort-select');
+        if (!sortSelect) return;
+        
+        sortSelect.addEventListener('change', () => {
+            const sortValue = sortSelect.value;
+            const fruitsGrid = document.querySelector('.fruits-grid');
+            if (!fruitsGrid) {
+                console.warn('[FruitSorting] .fruits-grid not found – aborting sort.');
+                return;
+            }
+            
+            const fruitCards = Array.from(fruitsGrid.querySelectorAll('.fruit-card'));
+            
+            // Sort cards
+            fruitCards.sort((a, b) => {
+                switch (sortValue) {
+                    case 'name': {
+                        const nameA = a.querySelector('.fruit-name').textContent;
+                        const nameB = b.querySelector('.fruit-name').textContent;
+                        return nameA.localeCompare(nameB);
+                    }
+                        
+                    case 'name-desc': {
+                        const nameDescA = a.querySelector('.fruit-name').textContent;
+                        const nameDescB = b.querySelector('.fruit-name').textContent;
+                        return nameDescB.localeCompare(nameDescA);
+                    }
+                        
+                    case 'price-asc': {
+                        const priceA = parseFloat(a.querySelector('.fruit-price').dataset.price || 0);
+                        const priceB = parseFloat(b.querySelector('.fruit-price').dataset.price || 0);
+                        return priceA - priceB;
+                    }
+                        
+                    case 'price-desc': {
+                        const priceDescA = parseFloat(a.querySelector('.fruit-price').dataset.price || 0);
+                        const priceDescB = parseFloat(b.querySelector('.fruit-price').dataset.price || 0);
+                        return priceDescB - priceDescA;
+                    }
+                        
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Re-append cards in sorted order
+            fruitCards.forEach((card, index) => {
+                setTimeout(() => {
+                    fruitsGrid.appendChild(card);
+                    card.style.animation = 'fadeInUp 0.5s ease-out';
+                }, index * 50);
+            });
+        });
+    }
+
+    setupQuantitySelectors() {
+        // Store original button texts
+        const buttonTexts = new WeakMap();
+        
+        document.addEventListener('click', (event) => {
+            // Handle quantity buttons
+            const qtyBtn = event.target.closest('.qty-btn');
+            if (qtyBtn) {
+                const input = qtyBtn.parentElement.querySelector('.qty-input');
+                if (!input) {
+                    console.warn('Quantity input not found');
+                    return;
+                }
+                
+                const currentValue = parseInt(input.value) || 1;
+                
+                if (qtyBtn.classList.contains('plus')) {
+                    input.value = Math.min(currentValue + 1, 99);
+                } else if (qtyBtn.classList.contains('minus')) {
+                    input.value = Math.max(currentValue - 1, 1);
+                }
+                
+                // Trigger change event
+                input.dispatchEvent(new Event('change'));
+            }
+            
+            // Handle add to cart with quantity
+            if (event.target.classList.contains('add-to-cart-btn')) {
+                event.stopPropagation(); // prevent CartManager duplicate handler
+                const card = event.target.closest('.fruit-card');
+                if (!card) return;
+                
+                const quantityInput = card.querySelector('.qty-input');
+                const quantity = parseInt(quantityInput?.value) || 1;
+                
+                // Store original text if not already stored
+                if (!buttonTexts.has(event.target)) {
+                    buttonTexts.set(event.target, event.target.textContent);
+                }
+                
+                // Add loading state
+                event.target.classList.add('loading');
+                event.target.disabled = true;
+                
+                // Simulate adding to cart
+                setTimeout(() => {
+                    const fruitName = card.querySelector('.fruit-name').textContent;
+                    const price = event.target.dataset.price;
+                    
+                    // Add to cart with quantity (more efficient)
+                    this.cart.addToCartWithQuantity({
+                        name: fruitName,
+                        price: price.startsWith('$') ? price : `$${price}`,
+                        id: this.cart.generateId(fruitName),
+                        quantity: quantity
+                    });
+                    
+                    // Remove loading state
+                    event.target.classList.remove('loading');
+                    event.target.disabled = false;
+                    
+                    // Reset quantity
+                    if (quantityInput) {
+                        quantityInput.value = 1;
+                    }
+                    
+                    // Show success animation
+                    event.target.textContent = '✓ Added!';
+                    const originalText = buttonTexts.get(event.target);
+                    setTimeout(() => {
+                        event.target.textContent = originalText;
+                    }, 1500);
+                }, 600);
+            }
+        });
+        
+        // Handle quantity input changes
+        document.addEventListener('change', (event) => {
+            if (event.target.classList.contains('qty-input')) {
+                const value = parseInt(event.target.value) || 1;
+                event.target.value = Math.max(1, Math.min(value, 99));
+                
+                // Announce change for screen readers
+                if (window.fruitWebsite?.accessibility) {
+                    window.fruitWebsite.accessibility.announce(`Quantity updated to ${event.target.value}`);
+                }
+            }
         });
     }
 
@@ -841,14 +1097,38 @@ class CartManager {
             });
         }
 
+        // Use common post-add logic
+        const notification = `${fruit.name} added to cart!`;
+        this._postAddToCart(fruit, notification);
+    }
+
+    addToCartWithQuantity(fruit) {
+        const existingItem = this.items.find(item => item.id === fruit.id);
+        
+        if (existingItem) {
+            existingItem.quantity += fruit.quantity;
+        } else {
+            this.items.push({
+                ...fruit,
+                addedAt: new Date().toISOString()
+            });
+        }
+        
+        // Use common post-add logic
+        const notification = `${fruit.quantity} × ${fruit.name} added to cart!`;
+        this._postAddToCart(fruit, notification);
+    }
+    
+    _postAddToCart(fruit, notificationMessage) {
         this.saveCart();
         this.updateCartDisplay();
         this.renderCartItems();
         this.showAddToCartAnimation(fruit);
         
         // Show notification
-        const notification = `${fruit.name} added to cart!`;
-        window.fruitWebsite.showNotification(notification, 'success');
+        if (window.fruitWebsite?.showNotification) {
+            window.fruitWebsite.showNotification(notificationMessage, 'success');
+        }
     }
 
     removeFromCart(fruitId) {
