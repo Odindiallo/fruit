@@ -2069,6 +2069,26 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Ensure all main sections use theme colors */
+.hero,
+.fruits-section,
+.about-section,
+.nutrition-section,
+.contact-section {
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
+}
+
+/* Fix any potential color conflicts */
+.fruit-card,
+.feature-item,
+.nutrition-card,
+.contact-method {
+    background-color: var(--theme-card-bg);
+    color: var(--theme-text);
+    border-color: var(--theme-border);
+}
+
 /* Dark mode specific adjustments */
 [data-theme="dark"] .navbar {
     background: var(--theme-nav-bg);
@@ -2123,9 +2143,11 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
-    z-index: 1000;
+    z-index: 1001;
+    opacity: 1;
+    visibility: visible;
 }
 
 .theme-toggle:hover {
@@ -3055,4 +3077,63 @@ select[aria-invalid="true"] {
     .fruit-orbit {
         animation: none;
     }
+}
+
+/* ====================================
+   THEME CONSISTENCY IMPROVEMENTS
+   ==================================== */
+
+/* Additional dark mode fixes for consistency */
+[data-theme="dark"] .hero-title {
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .hero-subtitle {
+    color: var(--gray-400);
+}
+
+[data-theme="dark"] .stat-label {
+    color: var(--gray-400);
+}
+
+[data-theme="dark"] .fruit-details span {
+    color: var(--gray-400);
+    background: var(--gray-800);
+}
+
+[data-theme="dark"] .theme-toggle {
+    background: var(--secondary-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Ensure theme toggle is always visible */
+.theme-toggle {
+    pointer-events: auto !important;
+    display: flex !important;
+}
+
+/* Improve text readability in all themes */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--theme-text);
+}
+
+p, span, div {
+    color: inherit;
+}
+
+/* Fix any remaining color inconsistencies */
+.section-title {
+    color: var(--theme-text);
+}
+
+.section-subtitle {
+    color: var(--gray-600);
+}
+
+[data-theme="dark"] .section-subtitle {
+    color: var(--gray-400);
 }
