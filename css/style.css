@@ -2526,13 +2526,46 @@ body {
     }
 }
 
-/* Improved focus indicators */
+/* Enhanced focus indicators for better accessibility */
 .btn:focus-visible,
 .filter-btn:focus-visible,
-.add-to-cart-btn:focus-visible {
-    outline: 3px solid var(--primary-color);
+.add-to-cart-btn:focus-visible,
+.quick-add-btn:focus-visible,
+.qty-btn:focus-visible,
+.cart-btn:focus-visible,
+.nav-toggle:focus-visible,
+.theme-toggle:focus-visible,
+.back-to-top:focus-visible {
+    outline: 3px solid var(--accent-color);
     outline-offset: 2px;
-    box-shadow: 0 0 0 6px rgba(255, 107, 53, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 0 0 1px var(--white), 0 0 8px rgba(255, 193, 7, 0.3);
+}
+
+/* Enhanced focus for search input */
+.fruit-search:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 1px;
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
+}
+
+/* Enhanced focus for interactive elements */
+.fruit-card:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 4px;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .btn:focus-visible,
+    .filter-btn:focus-visible,
+    .add-to-cart-btn:focus-visible {
+        outline: 4px solid;
+        outline-color: Highlight;
+        box-shadow: none;
+    }
 }
 
 /* Performance optimizations */

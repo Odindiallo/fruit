@@ -45,6 +45,13 @@ This file is created to trigger a comprehensive CodeRabbit AI review of the enti
 - ES6+ feature usage
 - CSS Grid and Flexbox optimization
 
+### 🔍 SEO & Performance Optimization
+- Meta tag optimization and Open Graph implementation
+- Structured data and semantic HTML validation
+- Core Web Vitals optimization (LCP, FID, CLS)
+- Image optimization and lazy loading strategies
+- PWA offline functionality and caching strategies
+
 ## Specific Areas of Interest
 1. **Search functionality** - Performance and user experience
 2. **Shopping cart system** - State management and persistence
@@ -62,6 +69,6 @@ This file is created to trigger a comprehensive CodeRabbit AI review of the enti
 - Refactoring suggestions for improved maintainability
 
 ---
-*Generated on: 2024-01-15*
+*Generated on: 2025-01-06*
 *Repository: Odindiallo/fruit*
 *Branch: v1*

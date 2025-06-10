@@ -226,7 +226,10 @@ class FruitWebsite {
         const searchBtn = document.querySelector('.search-btn');
         const searchResults = document.getElementById('search-results');
         
-        if (!searchInput) return;
+        if (!searchInput || !searchBtn || !searchResults) {
+            console.warn('[FruitSearch] Search controls not found – feature disabled.');
+            return;
+        }
         
         let searchTimeout;
         
@@ -256,14 +259,16 @@ class FruitWebsite {
             });
             
             // Update results count
-            if (query) {
-                searchResults.textContent = `Found ${visibleCount} fruit${visibleCount !== 1 ? 's' : ''}`;
-            } else {
-                searchResults.textContent = '';
+            if (searchResults) {
+                searchResults.textContent = query
+                    ? `Found ${visibleCount} fruit${visibleCount !== 1 ? 's' : ''}`
+                    : '';
             }
             
             // Show no results message if needed
             const fruitsGrid = document.querySelector('.fruits-grid');
+            if (!fruitsGrid) return;
+            
             const existingNoResults = fruitsGrid.querySelector('.no-results');
             
             if (visibleCount === 0 && query) {
@@ -324,6 +329,11 @@ class FruitWebsite {
         sortSelect.addEventListener('change', () => {
             const sortValue = sortSelect.value;
             const fruitsGrid = document.querySelector('.fruits-grid');
+            if (!fruitsGrid) {
+                console.warn('[FruitSorting] .fruits-grid not found – aborting sort.');
+                return;
+            }
+            
             const fruitCards = Array.from(fruitsGrid.querySelectorAll('.fruit-card'));
             
             // Sort cards
@@ -374,8 +384,9 @@ class FruitWebsite {
         
         document.addEventListener('click', (event) => {
             // Handle quantity buttons
-            if (event.target.classList.contains('qty-btn')) {
-                const input = event.target.parentElement.querySelector('.qty-input');
+            const qtyBtn = event.target.closest('.qty-btn');
+            if (qtyBtn) {
+                const input = qtyBtn.parentElement.querySelector('.qty-input');
                 if (!input) {
                     console.warn('Quantity input not found');
                     return;
@@ -383,9 +394,9 @@ class FruitWebsite {
                 
                 const currentValue = parseInt(input.value) || 1;
                 
-                if (event.target.classList.contains('plus')) {
+                if (qtyBtn.classList.contains('plus')) {
                     input.value = Math.min(currentValue + 1, 99);
-                } else if (event.target.classList.contains('minus')) {
+                } else if (qtyBtn.classList.contains('minus')) {
                     input.value = Math.max(currentValue - 1, 1);
                 }
                 
@@ -395,6 +406,7 @@ class FruitWebsite {
             
             // Handle add to cart with quantity
             if (event.target.classList.contains('add-to-cart-btn')) {
+                event.stopPropagation(); // prevent CartManager duplicate handler
                 const card = event.target.closest('.fruit-card');
                 if (!card) return;
                 
@@ -418,7 +430,7 @@ class FruitWebsite {
                     // Add to cart with quantity (more efficient)
                     this.cart.addToCartWithQuantity({
                         name: fruitName,
-                        price: `$${price}`,
+                        price: price.startsWith('$') ? price : `$${price}`,
                         id: this.cart.generateId(fruitName),
                         quantity: quantity
                     });
@@ -1085,14 +1097,9 @@ class CartManager {
             });
         }
 
-        this.saveCart();
-        this.updateCartDisplay();
-        this.renderCartItems();
-        this.showAddToCartAnimation(fruit);
-        
-        // Show notification
+        // Use common post-add logic
         const notification = `${fruit.name} added to cart!`;
-        window.fruitWebsite.showNotification(notification, 'success');
+        this._postAddToCart(fruit, notification);
     }
 
     addToCartWithQuantity(fruit) {
@@ -1107,14 +1114,21 @@ class CartManager {
             });
         }
         
+        // Use common post-add logic
+        const notification = `${fruit.quantity} × ${fruit.name} added to cart!`;
+        this._postAddToCart(fruit, notification);
+    }
+    
+    _postAddToCart(fruit, notificationMessage) {
         this.saveCart();
         this.updateCartDisplay();
         this.renderCartItems();
         this.showAddToCartAnimation(fruit);
         
-        // Show notification with quantity
-        const notification = `${fruit.quantity} × ${fruit.name} added to cart!`;
-        window.fruitWebsite.showNotification(notification, 'success');
+        // Show notification
+        if (window.fruitWebsite?.showNotification) {
+            window.fruitWebsite.showNotification(notificationMessage, 'success');
+        }
     }
 
     removeFromCart(fruitId) {
